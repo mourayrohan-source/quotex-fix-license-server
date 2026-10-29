@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROCK STAR License Admin</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f13;
+      color: #e4e4e7;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+    h1 { font-size: 1.8rem; margin-bottom: 8px; color: #a78bfa; }
+    .subtitle { color: #a1a1aa; margin-bottom: 24px; }
+    .card {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card h2 { font-size: 1.1rem; margin-bottom: 16px; color: #c4b5fd; }
+    label { display: block; font-size: 0.85rem; color: #a1a1aa; margin-bottom: 6px; }
+    input, select, button {
+      font-size: 0.95rem;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #3f3f46;
+      background: #27272a;
+      color: #fff;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    input:focus, select:focus { outline: none; border-color: #8b5cf6; }
+    button {
+      background: #7c3aed;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    button:hover { background: #6d28d9; }
+    button.secondary { background: #3f3f46; }
+    button.danger { background: #dc2626; }
+    button.danger:hover { background: #b91c1c; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .row > * { flex: 1; min-width: 140px; }
+    .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .stat {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 10px;
+      padding: 14px 18px;
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+    }
+    .stat .num { font-size: 1.6rem; font-weight: 700; color: #a78bfa; }
+    .stat .label { font-size: 0.8rem; color: #a1a1aa; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #27272a; }
+    th { color: #a1a1aa; font-weight: 500; }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge.active { background: #065f46; color: #6ee7b7; }
+    .badge.unused { background: #1e3a8a; color: #93c5fd; }
+    .badge.expired { background: #713f12; color: #fcd34d; }
+    .badge.revoked { background: #7f1d1d; color: #fca5a5; }
+    .key-box {
+      background: #27272a;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: monospace;
+      word-break: break-all;
+      margin-top: 10px;
+      display: none;
+    }
+    .key-box.show { display: block; }
+    .msg { margin-top: 10px; padding: 10px; border-radius: 8px; display: none; }
+    .msg.ok { background: #065f46; color: #6ee7b7; display: block; }
+    .msg.err { background: #7f1d1d; color: #fca5a5; display: block; }
+    .actions button { width: auto; padding: 6px 12px; margin: 0 4px 0 0; font-size: 0.8rem; }
+    #loginBox { max-width: 400px; margin: 80px auto; }
+    #mainApp { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Login -->
+    <div id="loginBox" class="card">
+      <h1>🔑 License Admin</h1>
+      <p class="subtitle">ROCK STAR / Quotex Premium</p>
+      <label>Admin Password</label>
+      <input type="password" id="adminPwd" placeholder="Enter admin password" />
+      <button onclick="login()">Login</button>
+      <div id="loginMsg" class="msg"></div>
+    </div>
+
+    <!-- Main -->
+    <div id="mainApp">
+      <h1>🚀 ROCK STAR License Server</h1>
+      <p class="subtitle">One key = One device • Time limited licenses</p>
+
+      <div class="stats" id="stats"></div>
+
+      <!-- Generate -->
+      <div class="card">
+        <h2>Generate License Keys</h2>
+        <div class="row">
+          <div>
+            <label>Duration</label>
+            <select id="duration">
+              <option value="10m">10 Minutes</option>
+              <option value="30m">30 Minutes</option>
+              <option value="1h">1 Hour</option>
+              <option value="1d" selected>1 Day</option>
+              <option value="1month">1 Month</option>
+              <option value="lifetime">Lifetime</option>
+            </select>
+          </div>
+          <div>
+            <label>Count (max 50)</label>
+            <input type="number" id="count" value="1" min="1" max="50" />
+          </div>
+          <div>
+            <label>Name / Note (optional)</label>
+            <input type="text" id="name" placeholder="Customer name" />
+          </div>
+          <div>
+            <label>Prefix</label>
+            <input type="text" id="prefix" value="ROCK" maxlength="8" />
+          </div>
+        </div>
+        <button onclick="generateKeys()">Generate Keys</button>
+        <div id="genMsg" class="msg"></div>
+        <div id="generatedKeys" class="key-box"></div>
+      </div>
+
+      <!-- List -->
+      <div class="card">
+        <h2>All Licenses <button class="secondary" style="width:auto;float:right;padding:6px 12px" onclick="loadList()">Refresh</button></h2>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Name</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Device</th>
+                <th>Expires</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="listBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let adminPassword = '';
+
+    function login() {
+      adminPassword = document.getElementById('adminPwd').value;
+      fetch('/api/admin/stats', {
+        headers: { 'x-admin-password': adminPassword }
+      })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          document.getElementById('loginBox').style.display = 'none';
+          document.getElementById('mainApp').style.display = 'block';
+          loadStats();
+          loadList();
+        } else {
+          showMsg('loginMsg', 'Wrong password', false);
+        }
+      })
+      .catch(() => showMsg('loginMsg', 'Server error', false));
+    }
+
+    function showMsg(id, text, ok) {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.className = 'msg ' + (ok ? 'ok' : 'err');
+    }
+
+    function loadStats() {
+      fetch('/api/admin/stats', { headers: { 'x-admin-password': adminPassword } })
+        .then(r => r.json())
+        .then(d => {
+          if (!d.success) return;
+          const s = d.stats;
+          document.getElementById('stats').innerHTML = `
+            <div class="stat"><div class="num">${s.total}</div><div class="label">Total</div></div>
+            <div class="stat"><div class="num">${s.unused}</div><div class="label">Unused</div></div>
+            <div class="stat"><div class="num">${s.active}</div><div class="label">Active</div></div>
+            <div class="stat"><div class="num">${s.expired}</div><div class="label">Expired</div></div>
+            <div class="stat"><div class="num">${s.revoked}</div><div class="label">Revoked</div></div>
+          `;
+        });
+    }
+
+    function generateKeys() {
+      const body = {
+        duration: document.getElementById('duration').value,
+        count: parseInt(document.getElementById('count').value) || 1,
+        name: document.getElementById('name').value,
+        prefix: document.getElementById('prefix').value || 'ROCK'
+      };
+      fetch('/api/admin/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-password': adminPassword
+        },
+        body: JSON.stringify(body)
+      })
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          showMsg('genMsg', d.message, true);
+          const box = document.getElementById('generatedKeys');
+          box.className = 'key-box show';
+          box.innerHTML = d.keys.map(k => `<div>${k}</div>`).join('');
+          loadStats();
+          loadList();
+        } else {
+          showMsg('genMsg', d.message || 'Error', false);
+        }
+      });
+    }
+
+    function loadList() {
+      fetch('/api/admin/list', { headers: { 'x-admin-password': adminPassword } })
+        .then(r => r.json())
+        .then(d => {
+          if (!d.success) return;
+          const tbody = document.getElementById('listBody');
+          tbody.innerHTML = d.licenses.map(l => {
+            const exp = l.expiresAt ? new Date(l.expiresAt).toLocaleString() : 'Never';
+            return `<tr>
+              <td style="font-family:monospace">${l.key}</td>
+              <td>${l.name || '-'}</td>
+              <td>${l.duration}</td>
+              <td><span class="badge ${l.status}">${l.status}</span></td>
+              <td>${l.hasDevice ? '🔒 Bound' : '🔓 Free'}</td>
+              <td>${exp}</td>
+              <td class="actions">
+                <button class="secondary" onclick="unbind('${l.key}')">Unbind</button>
+                <button class="danger" onclick="revoke('${l.key}')">Revoke</button>
+              </td>
+            </tr>`;
+          }).join('');
+        });
+    }
+
+    function revoke(key) {
+      if (!confirm('Revoke ' + key + ' ?')) return;
+      fetch('/api/admin/revoke', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+        body: JSON.stringify({ key })
+      }).then(r => r.json()).then(d => {
+        alert(d.message);
+        loadStats(); loadList();
+      });
+    }
+
+    function unbind(key) {
+      if (!confirm('Unbind device from ' + key + ' so it can be used on another device?')) return;
+      fetch('/api/admin/unbind', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+        body: JSON.stringify({ key })
+      }).then(r => r.json()).then(d => {
+        alert(d.message);
+        loadStats(); loadList();
+      });
+    }
+
+    // Enter key on password
+    document.getElementById('adminPwd').addEventListener('keypress', e => {
+      if (e.key === 'Enter') login();
+    });
+  </script>
+</body>
+</html>
